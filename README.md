@@ -56,8 +56,6 @@ Upon running a second time the decorator:
 
 ## Caveats
 * Only works with functions that return pandas objects with the `.to_pickle()` method.
-* If the function takes input args and these are changed after a cache operation, the decorator will naively load the existing pickle. To mitigate this `pandas_cache.del_cached()` can be invoked to remove all pickled pandas objects, or alternatively the pickle file can be deleted manually.
-
 
 ## Planned features
 * Automatic timing of `@pd_cache` operations.

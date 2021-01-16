@@ -35,38 +35,40 @@ def md5hash(s: str) -> str:
 def source_code(func):
     return ''.join(inspect.getsourcelines(func)[0])
 
-def pd_cache(func, cache_base=Path('.pd_cache')):
-    f_hash = md5hash(source_code(func).encode('utf-8'))[:6]
-    cache_dir = cache_base / f'.cache_{func.__name__}_{f_hash}'
+def pd_cache(cache_base=Path('.pd_cache')):
+    def _pd_cache(func):
+        f_hash = md5hash(source_code(func).encode('utf-8'))[:6]
+        cache_dir = cache_base / f'.cache_{func.__name__}_{f_hash}'
 
-    try:
-        cache_dir.mkdir(exist_ok=True, parents=True)
-        logger.info(f'created `{cache_dir}` dir')
+        try:
+            cache_dir.mkdir(exist_ok=True, parents=True)
+            logger.info(f'created `{cache_dir}` dir')
 
-    except FileExistsError:
-        pass
+        except FileExistsError:
+            pass
 
-    @wraps(func)
-    def cache(*args, **kw):
+        @wraps(func)
+        def cache(*args, **kw):
 
-        # Get raw code of function as str and hash it
-        func_code = source_code(func)
-        key = (func_code.encode('utf-8') + pickle.dumps(args, 1)+pickle.dumps(kw, 1))
-        hsh = md5hash(key)[:6]
+            # Get raw code of function as str and hash it
+            func_code = source_code(func)
+            key = (func_code.encode('utf-8') + pickle.dumps(args, 1)+pickle.dumps(kw, 1))
+            hsh = md5hash(key)[:6]
 
-        f = cache_dir/f'{hsh}.pkl'
+            f = cache_dir/f'{hsh}.pkl'
 
-        if f.exists():
-            df = pd.read_pickle(f)
-            logger.info(f'\t | read {f}')
-            return df
+            if f.exists():
+                df = pd.read_pickle(f)
+                logger.debug(f'\t | read {f}')
+                return df
 
-        else:
-            # Write new
-            df = func(*args, **kw)
-            df.to_pickle(f)
-            logger.info(f'\t | wrote {f}')
-            return df
+            else:
+                # Write new
+                df = func(*args, **kw)
+                df.to_pickle(f)
+                logger.debug(f'\t | wrote {f}')
+                return df
 
-    return cache
+        return cache
+    return _pd_cache
 

@@ -22,9 +22,9 @@ from functools import wraps
 import pandas as pd
 import pickle
 import os
-from glob import glob
 import hashlib
 import inspect
+from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,12 @@ def md5hash(s: str) -> str:
 def source_code(func):
     return ''.join(inspect.getsourcelines(func)[0])
 
+def pd_cache(func, cache_base=Path('.pd_cache')):
+    f_hash = md5hash(source_code(func).encode('utf-8'))[:6]
+    cache_dir = cache_base / f'.cache_{func.__name__}_{f_hash}'
+
     try:
+        cache_dir.mkdir(exist_ok=True, parents=True)
         logger.info(f'created `{cache_dir}` dir')
 
     except FileExistsError:
@@ -49,9 +54,9 @@ def source_code(func):
         key = (func_code.encode('utf-8') + pickle.dumps(args, 1)+pickle.dumps(kw, 1))
         hsh = md5hash(key)[:6]
 
-        f = f'.pd_cache/{func.__name__}_{hsh}.pkl'
+        f = cache_dir/f'{hsh}.pkl'
 
-        if os.path.exists(f):
+        if f.exists():
             df = pd.read_pickle(f)
             logger.info(f'\t | read {f}')
             return df

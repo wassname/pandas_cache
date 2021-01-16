@@ -24,13 +24,14 @@ import os
 from glob import glob
 import hashlib
 import inspect
+import logging
 
+logger = logging.getLogger(__name__)
 
 def pd_cache(func):
 
     try:
-        os.mkdir('.pd_cache')
-        print('created `./.pd_cache/ dir')
+        logger.info(f'created `{cache_dir}` dir')
 
     except FileExistsError:
         pass
@@ -47,7 +48,7 @@ def pd_cache(func):
 
         if os.path.exists(f):
             df = pd.read_pickle(f)
-            print(f'\t | read {f}')
+            logger.info(f'\t | read {f}')
             return df
 
         else:
@@ -60,7 +61,7 @@ def pd_cache(func):
             # Write new
             df = func(*args, **kw)
             df.to_pickle(f)
-            print(f'\t | wrote {f}')
+            logger.info(f'\t | wrote {f}')
             return df
 
     return cache

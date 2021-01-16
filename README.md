@@ -19,7 +19,7 @@ from pandas_cache import pd_cache, timeit
 import pandas as pd
 
 @timeit
-@pd_cache
+@pd_cache()
 def time_consuming_dataframe_operation():
     # Make a large dictionary 
     x = {i: k for i, k in enumerate(range(2**16))}
@@ -33,35 +33,28 @@ Output on first run:
 
 ```
 	 > function time_consuming_dataframe_operation time: 2.5 s
-	 | wrote .pd_cache/time_consuming_dataframe_operation_ace6f4.pkl
+	 | wrote .pd_cache/time_consuming_dataframe_operation_fe2bc4/ace6f4.pkl
 ```
 
 Output on second run:
 ```
-	 | read .pd_cache/time_consuming_dataframe_operation_ace6f4.pkl
+	 | read .pd_cache/time_consuming_dataframe_operation_fe2bc4/ace6f4.pkl
 	 > function time_consuming_dataframe_operation time: 6.0 ms
 ```
 In this example, the 2.5 second operation has been memoized and the results are loaded in 6ms.
 
 ## How It Works
 At runtime, the `@pd_cache` decorator :
-* Takes the hash of the decorated function's plain text code
+* Takes the hash of the decorated function's plain text code, arguments, and keywords
 * Pickles the pandas object returned by the decorated function
-* Saves the pickle to a new `./pd_cache/` dir and includes a slice of the hash and the name of the decorated fucntion in the filename.  
+* Saves the pickle to a new `./.pd_cache/function_name_fe2bc4/a1b2c9.pkl` file, which includes hashes of function code and call arguments.
 
 Upon running a second time the decorator:
 * Hashes the function code again
 * If the file already exists in the cache folder, it is loaded. 
-* If the code in the function has changed in any way, the decorator deletes the original pickle file and replaces it with the new output.
+* If the code in the function has changed in any way, the decorator use a new dir
 
 ## Caveats
 * Only works with functions that return pandas objects with the `.to_pickle()` method.
-* If the function takes input args and these are changed after a cache operation, the decorator will naively load the existing pickle. To mitigate this `pandas_cache.del_cached()` can be invoked to remove all pickled pandas objects, or alternatively the pickle file can be deleted manually.
-
-
-## Planned features
-* Automatic timing of `@pd_cache` operations.
-* `@pd_cache` detection of changes in function arguments to avoid naive loading of cached results.
-* Contributions are welcome.
 
 

@@ -62,12 +62,6 @@ def pd_cache(func, cache_base=Path('.pd_cache')):
             return df
 
         else:
-            # Delete any file name that has `cached_[func_name]_[6_chars]_.pkl`
-
-            for cached in glob(f'./.pd_cache/{func.__name__}_*.pkl'):
-                if (len(cached) - len(func.__name__)) == 20:
-                    os.remove(cached)
-                    print(f'\t | removed', cached)
             # Write new
             df = func(*args, **kw)
             df.to_pickle(f)
@@ -76,26 +70,3 @@ def pd_cache(func, cache_base=Path('.pd_cache')):
 
     return cache
 
-
-@pd_cache
-def test():
-
-    return pd.DataFrame([5, 54])
-
-
-def del_cached():
-    # TODO: update this to use the glob format from pd_cache to safeguard deleting arbitrary files.
-    cached = os.listdir('./.pd_cache/')
-    cached = ['./.pd_cache/'+ file_name for file_name in cached]
-    print(cached)
-    if len(cached) > 0:
-        [os.remove(x) for x in cached]
-        print(f'removed {cached}')
-        return
-    else:
-        return 'No cached DataFrames'
-
-
-if __name__ == '__main__':
-    test()
-    # del_cached()

@@ -20,6 +20,7 @@ that is will simply delete any objects cached by this decorator.
 from functools import wraps
 
 import pandas as pd
+import pickle
 import os
 from glob import glob
 import hashlib
@@ -28,7 +29,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def pd_cache(func):
+def md5hash(s: str) -> str:
+    return hashlib.md5(s).hexdigest()
+
+def source_code(func):
+    return ''.join(inspect.getsourcelines(func)[0])
 
     try:
         logger.info(f'created `{cache_dir}` dir')
@@ -40,9 +45,9 @@ def pd_cache(func):
     def cache(*args, **kw):
 
         # Get raw code of function as str and hash it
-        func_code = ''.join(inspect.getsourcelines(func)[0])
-        key = (func_code + repr(args) + repr(kw)).encode('utf8')
-        hsh = hashlib.md5(key).hexdigest()[:6]
+        func_code = source_code(func)
+        key = (func_code.encode('utf-8') + pickle.dumps(args, 1)+pickle.dumps(kw, 1))
+        hsh = md5hash(key)[:6]
 
         f = f'.pd_cache/{func.__name__}_{hsh}.pkl'
 

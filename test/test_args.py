@@ -38,7 +38,7 @@ def test_args(tmpdir):
     cache_dir = Path(tmpdir)
 
     def no_files():
-        return len(list(cache_dir.glob('**/*.pkl')))
+        return len(list(cache_dir.glob('**/*.pkl.gz')))
 
     assert no_files()==0, 'cache_dir should be empty'
 

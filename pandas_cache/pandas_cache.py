@@ -35,18 +35,21 @@ def md5hash(s: str) -> str:
 def source_code(func):
     return ''.join(inspect.getsourcelines(func)[0])
 
-def pd_cache(cache_base=Path('.pd_cache')):
+def pd_cache(cache_base=Path('.pd_cache'), use_code=True):
     def _pd_cache(func):
         @wraps(func)
         def cache(*args, **kw):
-            f_hash = md5hash(source_code(func).encode('utf-8'))[:6]
+            # The subdirectory contains function name and optionally code
+            if use_code:
+                f_hash = md5hash(source_code(func).encode('utf-8'))[:6]
+            else:
+                f_hash = "-1"
             cache_dir = cache_base / f'{func.__name__}_{f_hash}'
             if not cache_dir.exists():
                 cache_dir.mkdir(exist_ok=True, parents=True)
                 logger.info(f'created `{cache_dir}` dir')
 
-            # Get raw code of function as str and hash it
-            func_code = source_code(func)
+            # The file name contains the has of functions args and kwargs
             key = (pickle.dumps(args, 1)+pickle.dumps(kw, 1))
             hsh = md5hash(key)[:6]
 

@@ -20,7 +20,8 @@ that is will simply delete any objects cached by this decorator.
 from functools import wraps
 
 import pandas as pd
-import pickle
+import hickle
+import dill
 import os
 import hashlib
 import inspect
@@ -47,20 +48,21 @@ def pd_cache(cache_base=Path('.pd_cache')):
 
             # Get raw code of function as str and hash it
             func_code = source_code(func)
-            key = (pickle.dumps(args, 1)+pickle.dumps(kw, 1))
+            key = (dill.dumps(args, 1)+dill.dumps(kw, 1))
             hsh = md5hash(key)[:6]
 
-            f = cache_dir/f'{hsh}.pkl'
+            f = cache_dir/f'{hsh}.h5'
 
             if f.exists():
-                df = pd.read_pickle(f)
+                # df = hickle.load(f.open('rb'))
+                df = pd.read_hdf(f, 'data')
                 logger.debug(f'\t | read {f}')
                 return df
 
             else:
                 # Write new
                 df = func(*args, **kw)
-                df.to_pickle(f)
+                df.to_hdf(f, 'data', format='table')
                 logger.debug(f'\t | wrote {f}')
                 return df
 

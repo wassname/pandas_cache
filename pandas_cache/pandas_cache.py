@@ -50,7 +50,7 @@ def pd_cache(cache_base=Path('.pd_cache')):
             key = (pickle.dumps(args, 1)+pickle.dumps(kw, 1))
             hsh = md5hash(key)[:6]
 
-            f = cache_dir/f'{hsh}.pkl'
+            f = cache_dir/f'{hsh}.pkl.gz'
 
             if f.exists():
                 df = pd.read_pickle(f)
